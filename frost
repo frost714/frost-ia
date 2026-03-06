@@ -1,0 +1,31 @@
+from flask import Flask, request, jsonify
+import random
+
+app = Flask(__name__)
+
+respostas = [
+    "Oi! 😄",
+    "Conta mais!",
+    "Interessante 🤔",
+    "Entendo...",
+    "Isso parece importante."
+]
+
+@app.route("/")
+def home():
+    return "Frost IA está online ❄️"
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    msg = data.get("msg","")
+
+    resposta = random.choice(respostas)
+
+    return jsonify({
+        "resposta": resposta
+    })
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)flask
+gunicorn
