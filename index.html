@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frost IA Supreme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: #f1f1f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        h1 {
+            color: #00d8ff;
+        }
+        #chatBox {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            border: 1px solid #444;
+            padding: 10px;
+            overflow-y: auto;
+            background: #2b2b2b;
+            margin-bottom: 10px;
+        }
+        #msgInput {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 5px;
+            border: none;
+            background: #00d8ff;
+            color: #000;
+            cursor: pointer;
+        }
+        .msg {
+            margin-bottom: 10px;
+        }
+        .user {
+            color: #ffd700;
+        }
+        .bot {
+            color: #00ffab;
+        }
+    </style>
+</head>
+<body>
+    <h1>Frost IA Supreme</h1>
+    <div id="chatBox"></div>
+    <input type="text" id="msgInput" placeholder="Digite sua mensagem..." />
+    <button onclick="enviarMensagem()">Enviar</button>
+
+    <script>
+        async function enviarMensagem() {
+            const msgInput = document.getElementById("msgInput");
+            const chatBox = document.getElementById("chatBox");
+            const texto = msgInput.value.trim();
+            if (!texto) return;
+
+            // Mostra a mensagem do usuário
+            const userMsg = document.createElement("div");
+            userMsg.className = "msg user";
+            userMsg.textContent = "Você: " + texto;
+            chatBox.appendChild(userMsg);
+
+            msgInput.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Envia para o Flask
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ msg: texto })
+            });
+            const data = await response.json();
+
+            // Mostra a resposta do bot
+            const botMsg = document.createElement("div");
+            botMsg.className = "msg bot";
+            botMsg.textContent = "Frost IA: " + data.resposta;
+            chatBox.appendChild(botMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Permitir enviar com Enter
+        document.getElementById("msgInput").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") enviarMensagem();
+        });
+    </script>
+</body>
+</html>
