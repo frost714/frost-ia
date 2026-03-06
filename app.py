@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-import requests, urllib.parse, random
+import requests, urllib.parse, random, os
 from duckduckgo_search import DDGS
 from datetime import datetime
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")  # pasta static configurada
 
 # ---------------- MEMÓRIA ----------------
 memoria = []
@@ -101,7 +101,7 @@ def pesquisar_wikipedia(termo):
     termo_url = urllib.parse.quote(termo)
     url = f"https://pt.wikipedia.org/api/rest_v1/page/summary/{termo_url}"
     try:
-        r = requests.get(url,timeout=5)
+        r = requests.get(url, timeout=5)
         data = r.json()
         if "extract" in data:
             return data["extract"]
@@ -113,7 +113,7 @@ def pesquisar_wikipedia(termo):
 def pesquisar_duck(termo):
     try:
         with DDGS() as ddgs:
-            resultados = ddgs.text(termo,max_results=1)
+            resultados = ddgs.text(termo, max_results=1)
             for r in resultados:
                 return f"{r['title']}\n{r['body']}\n{r['href']}"
     except:
@@ -151,7 +151,7 @@ def frost(texto):
 
     # Pesquisa
     if texto.startswith("pesquisar"):
-        termo = texto.replace("pesquisar","").strip()
+        termo = texto.replace("pesquisar", "").strip()
         wiki = pesquisar_wikipedia(termo)
         if wiki:
             return wiki
@@ -171,9 +171,9 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
-    msg = data.get("msg","")
+    msg = data.get("msg", "")
     resposta = frost(msg)
-    return jsonify({"resposta": resposta, "memoria": memoria[-5:]})  # retorna últimas 5 mensagens
+    return jsonify({"resposta": resposta, "memoria": memoria[-5:]})  # últimas 5 mensagens
 
 # ---------------- ROTA HTML ----------------
 @app.route("/chatpage")
@@ -182,4 +182,5 @@ def chatpage():
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))  # usa porta do Render ou 10000 local
+    app.run(host="0.0.0.0", port=port)
