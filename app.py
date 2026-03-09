@@ -3,6 +3,7 @@ import requests
 import urllib.parse
 import random
 import os
+import re
 from duckduckgo_search import DDGS
 
 app = Flask(__name__, static_folder="static")
@@ -16,19 +17,13 @@ respostas = [
 "Legal 😎"
 ]
 
-combos = {
-"combo de mahito":"3 m1 → downslash → 1 → dash → 4",
-"combo de itadori":"3 m1 → uppercut → 1 → 2 → 3"
-}
-
 def pesquisar_wikipedia(termo):
 
     termo_url = urllib.parse.quote(termo)
-
     url = f"https://pt.wikipedia.org/api/rest_v1/page/summary/{termo_url}"
 
     try:
-        r = requests.get(url,timeout=5)
+        r = requests.get(url, timeout=5)
         data = r.json()
 
         if "extract" in data:
@@ -46,7 +41,7 @@ def pesquisar_duck(termo):
 
         with DDGS() as ddgs:
 
-            resultados = ddgs.text(termo,max_results=1)
+            resultados = ddgs.text(termo, max_results=1)
 
             for r in resultados:
 
@@ -64,49 +59,50 @@ def frost(msg):
 
     memoria.append(texto)
 
-    for c in combos:
+    # cálculo matemático
+    try:
+        conta = re.findall(r"[0-9\+\-\*\/\.\(\) ]+", texto)
 
-        if c in texto:
+        if conta:
+            resultado = eval(conta[0])
+            return f"O resultado é {resultado}"
+    except:
+        pass
 
-            return combos[c]
+    # pesquisa wikipedia automática
+    wiki = pesquisar_wikipedia(texto)
 
-    perguntas = ["quem","o que","como","onde","quando","por que"]
+    if wiki:
+        return wiki
 
-    if any(p in texto for p in perguntas):
+    # pesquisa internet
+    duck = pesquisar_duck(texto)
 
-        termo = texto.replace("quem é","").replace("o que é","").strip()
-
-        wiki = pesquisar_wikipedia(termo)
-
-        if wiki:
-            return wiki
-
-        return pesquisar_duck(termo)
+    if duck:
+        return duck
 
     return random.choice(respostas)
 
 
 @app.route("/")
 def home():
+    return send_from_directory("static", "index.html")
 
-    return send_from_directory("static","index.html")
 
-
-@app.route("/chat",methods=["POST"])
+@app.route("/chat", methods=["POST"])
 def chat():
 
     data = request.json
-
-    msg = data.get("msg","")
+    msg = data.get("msg", "")
 
     resposta = frost(msg)
 
-    return jsonify({"resposta":resposta})
+    return jsonify({"resposta": resposta})
 
 
 if __name__ == "__main__":
 
-    port = int(os.environ.get("PORT",10000))
+    port = int(os.environ.get("PORT", 8080))
 
-    app.run(host="0.0.0.0",port=port)
+    app.run(host="0.0.0.0", port=port)
 
