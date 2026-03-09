@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__, static_folder="static")
 
-def pesquisar(termo):
+def pesquisar(query):
 
     resultados = []
 
@@ -13,7 +13,7 @@ def pesquisar(termo):
         with DDGS() as ddgs:
 
             busca = ddgs.text(
-                termo,
+                query,
                 region="br-pt",
                 safesearch="off",
                 max_results=5
@@ -35,22 +35,23 @@ def pesquisar(termo):
 
 @app.route("/")
 def home():
-
-    return send_from_directory("static","index.html")
+    return send_from_directory("static", "index.html")
 
 
 @app.route("/search", methods=["POST"])
 def search():
 
     data = request.json
-
-    query = data.get("query","")
+    query = data.get("query", "")
 
     resultados = pesquisar(query)
 
     return jsonify(resultados)
 
 
+# porta correta para Render
 if __name__ == "__main__":
 
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 10000))
+
+    app.run(host="0.0.0.0", port=port)
